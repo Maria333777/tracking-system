@@ -1,88 +1,100 @@
-import tkinter as tk
-from tkinter import ttk, messagebox
+import flet as ft
 from models import add_supplier, get_suppliers
 
-class SuppliersView(ttk.Frame):
-    def __init__(self, parent):
-        super().__init__(parent)
+def suppliers_view(page: ft.Page):
+    company_name = ft.TextField(label="Company Name", width=250)
+    phone = ft.TextField(label="Phone", width=200)
+    email = ft.TextField(label="Email", width=250)
 
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(1, weight=1)
+    table_area = ft.Column()
 
-        form_frame = ttk.LabelFrame(self, text="Add Supplier")
-        form_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
+    def show_message(text):
+        page.snack_bar = ft.SnackBar(ft.Text(text))
+        page.snack_bar.open = True
+        page.update()
 
-        ttk.Label(form_frame, text="Company Name:").grid(row=0, column=0, padx=8, pady=8, sticky="w")
-        self.company_name_entry = ttk.Entry(form_frame, width=35)
-        self.company_name_entry.grid(row=0, column=1, padx=8, pady=8)
-
-        ttk.Label(form_frame, text="Phone:").grid(row=1, column=0, padx=8, pady=8, sticky="w")
-        self.phone_entry = ttk.Entry(form_frame, width=35)
-        self.phone_entry.grid(row=1, column=1, padx=8, pady=8)
-
-        ttk.Label(form_frame, text="Email:").grid(row=2, column=0, padx=8, pady=8, sticky="w")
-        self.email_entry = ttk.Entry(form_frame, width=35)
-        self.email_entry.grid(row=2, column=1, padx=8, pady=8)
-
-        add_button = ttk.Button(form_frame, text="Save Supplier", command=self.save_supplier)
-        add_button.grid(row=3, column=0, padx=8, pady=10)
-
-        refresh_button = ttk.Button(form_frame, text="Refresh Table", command=self.load_suppliers)
-        refresh_button.grid(row=3, column=1, padx=8, pady=10, sticky="w")
-
-        table_frame = ttk.LabelFrame(self, text="Suppliers List")
-        table_frame.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
-
-        self.tree = ttk.Treeview(
-            table_frame,
-            columns=("ID", "Company", "Phone", "Email"),
-            show="headings",
-            height=15
-        )
-
-        self.tree.heading("ID", text="ID")
-        self.tree.heading("Company", text="Company Name")
-        self.tree.heading("Phone", text="Phone")
-        self.tree.heading("Email", text="Email")
-
-        self.tree.column("ID", width=60, anchor="center")
-        self.tree.column("Company", width=250)
-        self.tree.column("Phone", width=180)
-        self.tree.column("Email", width=250)
-
-        self.tree.pack(fill="both", expand=True, padx=8, pady=8)
-
-        self.load_suppliers()
-
-    def save_supplier(self):
-        company_name = self.company_name_entry.get().strip()
-        phone = self.phone_entry.get().strip()
-        email = self.email_entry.get().strip()
-
-        if not company_name:
-            messagebox.showerror("Error", "Company name is required.")
-            return
-
-        try:
-            add_supplier(company_name, phone, email)
-            messagebox.showinfo("Success", "Supplier saved successfully.")
-            self.clear_form()
-            self.load_suppliers()
-        except Exception as e:
-            messagebox.showerror("Database Error", f"Could not save supplier:\n{e}")
-
-    def load_suppliers(self):
-        for row in self.tree.get_children():
-            self.tree.delete(row)
+    def load_suppliers():
+        table_area.controls.clear()
 
         try:
             suppliers = get_suppliers()
-            for supplier in suppliers:
-                self.tree.insert("", "end", values=supplier)
-        except Exception as e:
-            messagebox.showerror("Database Error", f"Could not load suppliers:\n{e}")
 
-    def clear_form(self):
-        self.company_name_entry.delete(0, tk.END)
-        self.phone_entry.delete(0, tk.END)
-        self.email_entry.delete(0, tk.END)
+            if not suppliers:
+                table_area.controls.append(ft.Text("No suppliers saved yet."))
+            else:
+                rows = []
+                for supplier in suppliers:
+                    rows.append(
+                        ft.DataRow(
+                            cells=[
+                                ft.DataCell(ft.Text(str(supplier[0]))),
+                                ft.DataCell(ft.Text(str(supplier[1]))),
+                                ft.DataCell(ft.Text(str(supplier[2]))),
+                                ft.DataCell(ft.Text(str(supplier[3]))),
+                            ]
+                        )
+                    )
+
+                table_area.controls.append(
+                    ft.DataTable(
+                        columns=[
+                            ft.DataColumn(ft.Text("ID")),
+                            ft.DataColumn(ft.Text("Company")),
+                            ft.DataColumn(ft.Text("Phone")),
+                            ft.DataColumn(ft.Text("Email")),
+                        ],
+                        rows=rows
+                    )
+                )
+
+            page.update()
+
+        except Exception as e:
+            show_message(f"Could not load suppliers: {e}")
+
+    def save_supplier(e):
+        name = company_name.value.strip()
+        phone_value = phone.value.strip()
+        email_value = email.value.strip()
+
+        if name == "":
+            show_message("Company name is required.")
+            return
+
+        try:
+            add_supplier(name, phone_value, email_value)
+
+            company_name.value = ""
+            phone.value = ""
+            email.value = ""
+
+            load_suppliers()
+            show_message("Supplier saved successfully.")
+
+        except Exception as e:
+            show_message(f"Could not save supplier: {e}")
+
+    load_suppliers()
+
+    return ft.Container(
+        padding=20,
+        content=ft.Column(
+            controls=[
+                ft.Text("Suppliers", size=20, weight=ft.FontWeight.BOLD),
+                ft.Row(
+                    controls=[company_name, phone, email],
+                    wrap=True
+                ),
+                ft.Row(
+                    controls=[
+                        ft.ElevatedButton("Save Supplier", on_click=save_supplier),
+                        ft.OutlinedButton("Refresh Table", on_click=lambda e: load_suppliers()),
+                    ]
+                ),
+                ft.Divider(),
+                ft.Text("Suppliers List", size=18, weight=ft.FontWeight.BOLD),
+                table_area,
+            ],
+            scroll=ft.ScrollMode.AUTO
+        )
+    )

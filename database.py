@@ -12,8 +12,7 @@ def connect_db():
 def create_tables():
     conn = connect_db()
     cursor = conn.cursor()
-
-    # Tabla de suplidores
+    
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS suppliers (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -23,7 +22,6 @@ def create_tables():
         )
     """)
 
-    # Tabla de compras
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS purchases (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,7 +38,6 @@ def create_tables():
         )
     """)
 
-    # Tabla de gastos
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS expenses (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
