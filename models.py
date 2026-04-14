@@ -1,7 +1,5 @@
 from database import connect_db
 
-
-# ---------------- SUPPLIERS ----------------
 def add_supplier(company_name, phone, email):
     conn = connect_db()
     cursor = conn.cursor()
@@ -33,8 +31,6 @@ def update_supplier(supplier_id, company_name, phone, email):
     conn.commit()
     conn.close()
 
-
-# ---------------- PURCHASES ----------------
 def add_purchase(supplier_id, item_name, quantity, unit_cost, purchase_date, status):
     total_cost = quantity * unit_cost
 
@@ -79,8 +75,6 @@ def update_purchase(purchase_id, supplier_id, item_name, quantity, unit_cost, pu
     conn.commit()
     conn.close()
 
-
-# ---------------- EXPENSES ----------------
 def add_expense(category, description, amount, expense_date, payment_method, status):
     conn = connect_db()
     cursor = conn.cursor()
