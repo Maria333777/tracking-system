@@ -88,7 +88,6 @@ def suppliers_view(page: ft.Page):
                 ft.Row(
                     controls=[
                         ft.ElevatedButton("Save Supplier", on_click=save_supplier),
-                        ft.OutlinedButton("Refresh Table", on_click=lambda e: load_suppliers()),
                     ]
                 ),
                 ft.Divider(),
