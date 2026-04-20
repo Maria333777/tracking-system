@@ -1,5 +1,5 @@
 import flet as ft
-from models import add_expense, get_expenses
+from models import add_expense, get_expenses, delete_expense
 
 def expenses_view(page: ft.Page):
     category = ft.Dropdown(
@@ -39,11 +39,22 @@ def expenses_view(page: ft.Page):
     )
 
     table_area = ft.Column()
+    selected_expense_id = None
 
     def show_message(text):
         page.snack_bar = ft.SnackBar(ft.Text(text))
         page.snack_bar.open = True
         page.update()
+
+    def select_expense(expense_id):
+        nonlocal selected_expense_id
+
+        if selected_expense_id == expense_id:
+            selected_expense_id = None
+        else:
+            selected_expense_id = expense_id
+
+        load_expenses()
 
     def load_expenses():
         table_area.controls.clear()
@@ -58,6 +69,8 @@ def expenses_view(page: ft.Page):
                 for expense in expenses_list:
                     rows.append(
                         ft.DataRow(
+                            selected=(selected_expense_id == expense[0]),
+                            on_select_changed=lambda e, expense_id=expense[0]: select_expense(expense_id),
                             cells=[
                                 ft.DataCell(ft.Text(str(expense[0]))),
                                 ft.DataCell(ft.Text(str(expense[1]))),
@@ -72,6 +85,7 @@ def expenses_view(page: ft.Page):
 
                 table_area.controls.append(
                     ft.DataTable(
+                        show_checkbox_column=True,
                         columns=[
                             ft.DataColumn(ft.Text("ID")),
                             ft.DataColumn(ft.Text("Category")),
@@ -124,6 +138,21 @@ def expenses_view(page: ft.Page):
         except Exception as e:
             show_message(f"Could not save expense: {e}")
 
+    def delete_selected_expense(e):
+        nonlocal selected_expense_id
+
+        if selected_expense_id is None:
+            show_message("Select an expense first.")
+            return
+
+        try:
+            delete_expense(selected_expense_id)
+            selected_expense_id = None
+            load_expenses()
+            show_message("Expense deleted successfully.")
+        except Exception as e:
+            show_message(f"Could not delete expense: {e}")
+
     load_expenses()
 
     return ft.Container(
@@ -136,6 +165,7 @@ def expenses_view(page: ft.Page):
                 ft.Row([
                     ft.ElevatedButton("Save Expense", on_click=save_expense),
                     ft.OutlinedButton("Refresh Table", on_click=lambda e: load_expenses()),
+                    ft.FilledButton("Delete Selected", on_click=delete_selected_expense),
                 ]),
                 ft.Divider(),
                 ft.Text("Expenses List", size=18, weight=ft.FontWeight.BOLD),

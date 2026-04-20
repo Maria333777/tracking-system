@@ -1,5 +1,5 @@
 import flet as ft
-from models import add_purchase, get_purchases, get_suppliers
+from models import add_purchase, get_purchases, get_suppliers, delete_purchase
 
 def purchases_view(page: ft.Page):
     supplier_dropdown = ft.Dropdown(label="Supplier", width=220)
@@ -21,11 +21,22 @@ def purchases_view(page: ft.Page):
     total_text = ft.Text("Total Cost: 0.00", size=16, weight=ft.FontWeight.BOLD)
     table_area = ft.Column()
     suppliers_map = {}
+    selected_purchase_id = None
 
     def show_message(text):
         page.snack_bar = ft.SnackBar(ft.Text(text))
         page.snack_bar.open = True
         page.update()
+
+    def select_purchase(purchase_id):
+        nonlocal selected_purchase_id
+
+        if selected_purchase_id == purchase_id:
+            selected_purchase_id = None
+        else:
+            selected_purchase_id = purchase_id
+
+        load_purchases()
 
     def load_suppliers():
         supplier_dropdown.options.clear()
@@ -70,6 +81,8 @@ def purchases_view(page: ft.Page):
                 for purchase in purchases_list:
                     rows.append(
                         ft.DataRow(
+                            selected=(selected_purchase_id == purchase[0]),
+                            on_select_changed=lambda e, purchase_id=purchase[0]: select_purchase(purchase_id),
                             cells=[
                                 ft.DataCell(ft.Text(str(purchase[0]))),
                                 ft.DataCell(ft.Text(str(purchase[1]))),
@@ -85,6 +98,7 @@ def purchases_view(page: ft.Page):
 
                 table_area.controls.append(
                     ft.DataTable(
+                        show_checkbox_column=True,
                         columns=[
                             ft.DataColumn(ft.Text("ID")),
                             ft.DataColumn(ft.Text("Supplier")),
@@ -148,6 +162,21 @@ def purchases_view(page: ft.Page):
         except Exception as e:
             show_message(f"Could not save purchase: {e}")
 
+    def delete_selected_purchase(e):
+        nonlocal selected_purchase_id
+
+        if selected_purchase_id is None:
+            show_message("Select a purchase first.")
+            return
+
+        try:
+            delete_purchase(selected_purchase_id)
+            selected_purchase_id = None
+            load_purchases()
+            show_message("Purchase deleted successfully.")
+        except Exception as e:
+            show_message(f"Could not delete purchase: {e}")
+
     quantity.on_change = calculate_total
     unit_cost.on_change = calculate_total
 
@@ -172,6 +201,7 @@ def purchases_view(page: ft.Page):
                     controls=[
                         ft.ElevatedButton("Save Purchase", on_click=save_purchase),
                         ft.OutlinedButton("Refresh Table", on_click=lambda e: load_purchases()),
+                        ft.FilledButton("Delete Selected", on_click=delete_selected_purchase),
                     ]
                 ),
                 ft.Divider(),

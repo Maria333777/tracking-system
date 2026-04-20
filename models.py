@@ -1,6 +1,6 @@
 from database import connect_db
 
-
+# ---------------- SUPPLIERS ----------------
 def add_supplier(company_name, phone, email):
     conn = connect_db()
     cursor = conn.cursor()
@@ -22,6 +22,13 @@ def get_suppliers():
     data = cursor.fetchall()
     conn.close()
     return data
+
+def delete_supplier(supplier_id):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM suppliers WHERE id = ?", (supplier_id,))
+    conn.commit()
+    conn.close()
 
 
 # ---------------- PURCHASES ----------------
@@ -54,6 +61,13 @@ def get_purchases():
     conn.close()
     return data
 
+def delete_purchase(purchase_id):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM purchases WHERE id = ?", (purchase_id,))
+    conn.commit()
+    conn.close()
+
 
 # ---------------- EXPENSES ----------------
 def add_expense(category, description, amount, expense_date, payment_method, status):
@@ -81,6 +95,13 @@ def get_expenses():
     data = cursor.fetchall()
     conn.close()
     return data
+
+def delete_expense(expense_id):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM expenses WHERE id = ?", (expense_id,))
+    conn.commit()
+    conn.close()
 
 
 # ---------------- DASHBOARD ----------------
