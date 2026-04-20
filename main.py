@@ -3,6 +3,8 @@ from database import create_tables
 from suppliers_view import suppliers_view
 from purchases import purchases_view
 from expenses import expenses_view
+from dashboard import dashboard_view
+from reports import reports_view
 
 def main(page: ft.Page):
     create_tables()
@@ -27,10 +29,7 @@ def main(page: ft.Page):
         tabs=[
             ft.Tab(
                 text="Dashboard",
-                content=ft.Container(
-                    content=ft.Text("Dashboard view coming soon..."),
-                    padding=20
-                )
+                content=dashboard_view(page)
             ),
             ft.Tab(
                 text="Suppliers",
@@ -46,10 +45,7 @@ def main(page: ft.Page):
             ),
             ft.Tab(
                 text="Reports",
-                content=ft.Container(
-                    content=ft.Text("Reports view coming soon..."),
-                    padding=20
-                )
+                content=reports_view(page)
             ),
         ],
     )

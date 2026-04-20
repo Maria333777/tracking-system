@@ -37,7 +37,6 @@ def purchases_view(page: ft.Page):
             for supplier in suppliers:
                 supplier_id = supplier[0]
                 company_name = supplier[1]
-
                 suppliers_map[company_name] = supplier_id
                 supplier_dropdown.options.append(ft.dropdown.Option(company_name))
 
@@ -123,7 +122,6 @@ def purchases_view(page: ft.Page):
                 show_message("Quantity and Unit Cost must be positive.")
                 return
 
-            total = qty * cost
             supplier_id = suppliers_map[supplier_name]
 
             add_purchase(
@@ -131,7 +129,6 @@ def purchases_view(page: ft.Page):
                 item,
                 qty,
                 cost,
-                total,
                 date,
                 purchase_status
             )
@@ -162,26 +159,21 @@ def purchases_view(page: ft.Page):
         content=ft.Column(
             controls=[
                 ft.Text("Purchases", size=22, weight=ft.FontWeight.BOLD),
-
                 ft.Row(
                     controls=[supplier_dropdown, item_name],
                     wrap=True
                 ),
-
                 ft.Row(
                     controls=[quantity, unit_cost, purchase_date, status],
                     wrap=True
                 ),
-
                 total_text,
-
                 ft.Row(
                     controls=[
                         ft.ElevatedButton("Save Purchase", on_click=save_purchase),
                         ft.OutlinedButton("Refresh Table", on_click=lambda e: load_purchases()),
                     ]
                 ),
-
                 ft.Divider(),
                 ft.Text("Purchases List", size=18, weight=ft.FontWeight.BOLD),
                 table_area,

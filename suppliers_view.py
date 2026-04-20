@@ -80,7 +80,7 @@ def suppliers_view(page: ft.Page):
         padding=20,
         content=ft.Column(
             controls=[
-                ft.Text("Suppliers", size=20, weight=ft.FontWeight.BOLD),
+                ft.Text("Suppliers", size=22, weight=ft.FontWeight.BOLD),
                 ft.Row(
                     controls=[company_name, phone, email],
                     wrap=True
@@ -88,6 +88,7 @@ def suppliers_view(page: ft.Page):
                 ft.Row(
                     controls=[
                         ft.ElevatedButton("Save Supplier", on_click=save_supplier),
+                        ft.OutlinedButton("Refresh Table", on_click=lambda e: load_suppliers()),
                     ]
                 ),
                 ft.Divider(),

@@ -2,17 +2,15 @@ import sqlite3
 
 DB_NAME = "company_tracking.db"
 
-
 def connect_db():
-    conn = sqlite3.connect(DB_NAME)
-    conn.execute("PRAGMA foreign_keys = ON")
-    return conn
-
+    return sqlite3.connect(DB_NAME)
 
 def create_tables():
     conn = connect_db()
     cursor = conn.cursor()
-    
+
+    cursor.execute("PRAGMA foreign_keys = ON")
+
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS suppliers (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -27,14 +25,12 @@ def create_tables():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             supplier_id INTEGER NOT NULL,
             item_name TEXT NOT NULL,
-            quantity INTEGER NOT NULL CHECK(quantity > 0),
+            quantity REAL NOT NULL CHECK(quantity > 0),
             unit_cost REAL NOT NULL CHECK(unit_cost > 0),
-            total_cost REAL NOT NULL CHECK(total_cost > 0),
+            total_cost REAL NOT NULL CHECK(total_cost >= 0),
             purchase_date TEXT NOT NULL,
             status TEXT,
             FOREIGN KEY (supplier_id) REFERENCES suppliers(id)
-                ON DELETE CASCADE
-                ON UPDATE CASCADE
         )
     """)
 
@@ -50,10 +46,13 @@ def create_tables():
         )
     """)
 
+    cursor.execute("""
+        CREATE VIEW IF NOT EXISTS monthly_expense_summary AS
+        SELECT substr(expense_date, 1, 7) AS month,
+               SUM(amount) AS total_expenses
+        FROM expenses
+        GROUP BY substr(expense_date, 1, 7)
+    """)
+
     conn.commit()
     conn.close()
-    print("Base de datos y tablas creadas correctamente.")
-
-
-if __name__ == "__main__":
-    create_tables()
