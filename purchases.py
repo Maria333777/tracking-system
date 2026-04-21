@@ -21,16 +21,16 @@ def purchases_view(page: ft.Page):
         page.snack_bar.open = True
         page.update()
 
-    def handle_purchase_date_change(e):
+    def handle_purchase_date_change(e: ft.Event[ft.DatePicker]):
         purchase_date.value = e.control.value.strftime("%Y-%m-%d")
         page.update()
 
-    def handle_purchase_date_dismissal(e):
+    def handle_purchase_date_dismissal(e: ft.Event[ft.DialogControl]):
         page.update()
 
     purchase_picker = ft.DatePicker(
         first_date=datetime.datetime(year=today.year - 1, month=1, day=1),
-        last_date=datetime.datetime(year=today.year + 1, month=12, day=31),
+        last_date=datetime.datetime(year=today.year + 1, month=today.month, day=20),
         on_change=handle_purchase_date_change,
         on_dismiss=handle_purchase_date_dismissal,
     )
@@ -40,15 +40,12 @@ def purchases_view(page: ft.Page):
 
     def load_suppliers():
         suppliers_map.clear()
-
         try:
             suppliers = get_suppliers()
-
             for supplier in suppliers:
                 supplier_id = supplier[0]
                 company_name = supplier[1]
                 suppliers_map[company_name] = supplier_id
-
         except Exception as e:
             show_message(f"Could not load suppliers: {e}")
 
@@ -56,11 +53,9 @@ def purchases_view(page: ft.Page):
         try:
             qty = float(quantity.value)
             cost = float(unit_cost.value)
-            total = qty * cost
-            total_text.value = f"Total Cost: {total:.2f}"
+            total_text.value = f"Total Cost: {qty * cost:.2f}"
         except:
             total_text.value = "Total Cost: 0.00"
-
         page.update()
 
     def load_purchases():
@@ -173,36 +168,31 @@ def purchases_view(page: ft.Page):
         content=ft.Column(
             controls=[
                 ft.Text("Purchases", size=22, weight=ft.FontWeight.BOLD),
-
                 ft.Row(
                     controls=[supplier_input, item_name],
                     wrap=True
                 ),
-
                 ft.Row(
                     controls=[
                         quantity,
                         unit_cost,
                         purchase_date,
                         ft.ElevatedButton(
-                            text="Pick date",
+                            "Pick date",
                             icon=ft.Icons.CALENDAR_MONTH,
                             on_click=open_purchase_picker,
                         ),
-                        status
+                        status,
                     ],
                     wrap=True
                 ),
-
                 total_text,
-
                 ft.Row(
                     controls=[
                         ft.ElevatedButton("Save Purchase", on_click=save_purchase),
                         ft.OutlinedButton("Refresh Table", on_click=refresh_table),
                     ]
                 ),
-
                 ft.Divider(),
                 ft.Text("Purchases List", size=18, weight=ft.FontWeight.BOLD),
                 table_area,
