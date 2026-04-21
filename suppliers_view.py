@@ -80,6 +80,19 @@ def suppliers_view(page: ft.Page):
         except Exception as error:
             show_message(f"Error: {error}")
 
+    def refresh_table(e):
+        load_suppliers()
+
+    def make_edit_handler(supplier):
+        def edit_handler(e):
+            fill_form(supplier)
+        return edit_handler
+
+    def make_delete_handler(supplier_id):
+        def delete_handler(e):
+            remove_supplier(supplier_id)
+        return delete_handler
+
     def load_suppliers():
         table_area.controls.clear()
         suppliers = get_suppliers()
@@ -100,13 +113,13 @@ def suppliers_view(page: ft.Page):
                             ft.DataCell(
                                 ft.TextButton(
                                     "Edit",
-                                    on_click=lambda e, supplier=supplier: fill_form(supplier)
+                                    on_click=make_edit_handler(supplier)
                                 )
                             ),
                             ft.DataCell(
                                 ft.TextButton(
                                     "Delete",
-                                    on_click=lambda e, supplier_id=supplier[0]: remove_supplier(supplier_id)
+                                    on_click=make_delete_handler(supplier[0])
                                 )
                             ),
                         ]
@@ -143,7 +156,7 @@ def suppliers_view(page: ft.Page):
                         ft.ElevatedButton("Save", on_click=save_supplier_data),
                         ft.ElevatedButton("Update", on_click=update_supplier_data),
                         ft.OutlinedButton("Clear", on_click=clear_form),
-                        ft.OutlinedButton("Refresh", on_click=lambda e: load_suppliers()),
+                        ft.OutlinedButton("Refresh", on_click=refresh_table),
                     ],
                     wrap=True
                 ),

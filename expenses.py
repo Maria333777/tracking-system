@@ -2,41 +2,12 @@ import flet as ft
 from models import add_expense, get_expenses, update_expense, delete_expense
 
 def expenses_view(page: ft.Page):
-    category = ft.Dropdown(
-        label="Category",
-        width=180,
-        options=[
-            ft.dropdown.Option("Office Supplies"),
-            ft.dropdown.Option("Transport"),
-            ft.dropdown.Option("Maintenance"),
-            ft.dropdown.Option("Utilities"),
-            ft.dropdown.Option("Other"),
-        ]
-    )
-
+    category = ft.TextField(label="Category", width=180)
     description = ft.TextField(label="Description", width=240)
     amount = ft.TextField(label="Amount", width=120)
     expense_date = ft.TextField(label="Expense Date", hint_text="YYYY-MM-DD", width=180)
-
-    payment_method = ft.Dropdown(
-        label="Payment Method",
-        width=180,
-        options=[
-            ft.dropdown.Option("Cash"),
-            ft.dropdown.Option("Card"),
-            ft.dropdown.Option("Transfer"),
-        ]
-    )
-
-    status = ft.Dropdown(
-        label="Status",
-        width=150,
-        options=[
-            ft.dropdown.Option("Paid"),
-            ft.dropdown.Option("Pending"),
-            ft.dropdown.Option("Approved"),
-        ]
-    )
+    payment_method = ft.TextField(label="Payment Method", width=180)
+    status = ft.TextField(label="Status", width=150)
 
     editing_id = None
     editing_text = ft.Text("Editing: none")
@@ -50,33 +21,33 @@ def expenses_view(page: ft.Page):
     def clear_form(e=None):
         nonlocal editing_id
         editing_id = None
-        category.value = None
+        category.value = ""
         description.value = ""
         amount.value = ""
         expense_date.value = ""
-        payment_method.value = None
-        status.value = None
+        payment_method.value = ""
+        status.value = ""
         editing_text.value = "Editing: none"
         page.update()
 
     def fill_form(expense):
         nonlocal editing_id
         editing_id = expense[0]
-        category.value = expense[1]
-        description.value = expense[2]
+        category.value = expense[1] or ""
+        description.value = expense[2] or ""
         amount.value = str(expense[3])
-        expense_date.value = expense[4]
-        payment_method.value = expense[5]
-        status.value = expense[6]
+        expense_date.value = expense[4] or ""
+        payment_method.value = expense[5] or ""
+        status.value = expense[6] or ""
         editing_text.value = f"Editing expense ID: {editing_id}"
         page.update()
 
     def save_expense_data(e):
-        cat = category.value
+        cat = category.value.strip()
         desc = description.value.strip()
         date = expense_date.value.strip()
-        pay = payment_method.value
-        stat = status.value
+        pay = payment_method.value.strip()
+        stat = status.value.strip()
 
         if not cat or not desc or not date:
             show_message("Fill all required fields.")
@@ -102,11 +73,11 @@ def expenses_view(page: ft.Page):
             show_message("Pick an expense first.")
             return
 
-        cat = category.value
+        cat = category.value.strip()
         desc = description.value.strip()
         date = expense_date.value.strip()
-        pay = payment_method.value
-        stat = status.value
+        pay = payment_method.value.strip()
+        stat = status.value.strip()
 
         if not cat or not desc or not date:
             show_message("Fill all required fields.")
@@ -136,6 +107,19 @@ def expenses_view(page: ft.Page):
         except Exception as error:
             show_message(f"Error: {error}")
 
+    def refresh_table(e):
+        load_expenses()
+
+    def make_edit_handler(expense):
+        def edit_handler(e):
+            fill_form(expense)
+        return edit_handler
+
+    def make_delete_handler(expense_id):
+        def delete_handler(e):
+            remove_expense(expense_id)
+        return delete_handler
+
     def load_expenses():
         table_area.controls.clear()
         expenses = get_expenses()
@@ -159,13 +143,13 @@ def expenses_view(page: ft.Page):
                             ft.DataCell(
                                 ft.TextButton(
                                     "Edit",
-                                    on_click=lambda e, expense=expense: fill_form(expense)
+                                    on_click=make_edit_handler(expense)
                                 )
                             ),
                             ft.DataCell(
                                 ft.TextButton(
                                     "Delete",
-                                    on_click=lambda e, expense_id=expense[0]: remove_expense(expense_id)
+                                    on_click=make_delete_handler(expense[0])
                                 )
                             ),
                         ]
@@ -206,7 +190,7 @@ def expenses_view(page: ft.Page):
                         ft.ElevatedButton("Save", on_click=save_expense_data),
                         ft.ElevatedButton("Update", on_click=update_expense_data),
                         ft.OutlinedButton("Clear", on_click=clear_form),
-                        ft.OutlinedButton("Refresh", on_click=lambda e: load_expenses()),
+                        ft.OutlinedButton("Refresh", on_click=refresh_table),
                     ],
                     wrap=True
                 ),
