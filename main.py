@@ -10,10 +10,9 @@ def main(page: ft.Page):
     create_tables()
 
     page.title = "Company Purchase and Expense Tracking System"
-    page.window_width = 1000
-    page.window_height = 650
+    page.window_width = 1100
+    page.window_height = 700
     page.padding = 20
-    page.theme_mode = ft.ThemeMode.DARK
     page.scroll = "auto"
 
     title = ft.Text(
@@ -23,39 +22,17 @@ def main(page: ft.Page):
     )
 
     tabs = ft.Tabs(
-        selected_index=0,
-        animation_duration=300,
         expand=1,
         tabs=[
-            ft.Tab(
-                text="Dashboard",
-                content=dashboard_view(page)
-            ),
-            ft.Tab(
-                text="Suppliers",
-                content=suppliers_view(page)
-            ),
-            ft.Tab(
-                text="Purchases",
-                content=purchases_view(page)
-            ),
-            ft.Tab(
-                text="Expenses",
-                content=expenses_view(page)
-            ),
-            ft.Tab(
-                text="Reports",
-                content=reports_view(page)
-            ),
-        ],
+            ft.Tab(text="Dashboard", content=dashboard_view(page)),
+            ft.Tab(text="Suppliers", content=suppliers_view(page)),
+            ft.Tab(text="Purchases", content=purchases_view(page)),
+            ft.Tab(text="Expenses", content=expenses_view(page)),
+            ft.Tab(text="Reports", content=reports_view(page)),
+        ]
     )
 
-    page.add(
-        ft.Column(
-            controls=[title, tabs],
-            expand=True
-        )
-    )
+    page.add(ft.Column([title, tabs], expand=True))
 
 if __name__ == "__main__":
     ft.app(target=main)

@@ -1,72 +1,39 @@
 import flet as ft
-from models import add_supplier, get_suppliers, delete_supplier
+from models import add_supplier, get_suppliers, update_supplier, delete_supplier
 
 def suppliers_view(page: ft.Page):
-    company_name = ft.TextField(label="Company Name", width=250)
-    phone = ft.TextField(label="Phone", width=200)
-    email = ft.TextField(label="Email", width=250)
+    company_name = ft.TextField(label="Company Name", width=220)
+    phone = ft.TextField(label="Phone", width=180)
+    email = ft.TextField(label="Email", width=220)
 
+    editing_id = None
+    editing_text = ft.Text("Editing: none")
     table_area = ft.Column()
-    selected_supplier_id = None
 
     def show_message(text):
         page.snack_bar = ft.SnackBar(ft.Text(text))
         page.snack_bar.open = True
         page.update()
 
-    def select_supplier(supplier_id):
-        nonlocal selected_supplier_id
+    def clear_form(e=None):
+        nonlocal editing_id
+        editing_id = None
+        company_name.value = ""
+        phone.value = ""
+        email.value = ""
+        editing_text.value = "Editing: none"
+        page.update()
 
-        if selected_supplier_id == supplier_id:
-            selected_supplier_id = None
-        else:
-            selected_supplier_id = supplier_id
+    def fill_form(supplier):
+        nonlocal editing_id
+        editing_id = supplier[0]
+        company_name.value = supplier[1] or ""
+        phone.value = supplier[2] or ""
+        email.value = supplier[3] or ""
+        editing_text.value = f"Editing supplier ID: {editing_id}"
+        page.update()
 
-        load_suppliers()
-
-    def load_suppliers():
-        table_area.controls.clear()
-
-        try:
-            suppliers = get_suppliers()
-
-            if not suppliers:
-                table_area.controls.append(ft.Text("No suppliers saved yet."))
-            else:
-                rows = []
-                for supplier in suppliers:
-                    rows.append(
-                        ft.DataRow(
-                            selected=(selected_supplier_id == supplier[0]),
-                            on_select_changed=lambda e, supplier_id=supplier[0]: select_supplier(supplier_id),
-                            cells=[
-                                ft.DataCell(ft.Text(str(supplier[0]))),
-                                ft.DataCell(ft.Text(str(supplier[1]))),
-                                ft.DataCell(ft.Text(str(supplier[2]))),
-                                ft.DataCell(ft.Text(str(supplier[3]))),
-                            ]
-                        )
-                    )
-
-                table_area.controls.append(
-                    ft.DataTable(
-                        show_checkbox_column=True,
-                        columns=[
-                            ft.DataColumn(ft.Text("ID")),
-                            ft.DataColumn(ft.Text("Company")),
-                            ft.DataColumn(ft.Text("Phone")),
-                            ft.DataColumn(ft.Text("Email")),
-                        ],
-                        rows=rows
-                    )
-                )
-
-            page.update()
-
-        except Exception as e:
-            show_message(f"Could not load suppliers: {e}")
-
-    def save_supplier(e):
+    def save_supplier_data(e):
         name = company_name.value.strip()
         phone_value = phone.value.strip()
         email_value = email.value.strip()
@@ -77,31 +44,91 @@ def suppliers_view(page: ft.Page):
 
         try:
             add_supplier(name, phone_value, email_value)
-
-            company_name.value = ""
-            phone.value = ""
-            email.value = ""
-
+            clear_form()
             load_suppliers()
-            show_message("Supplier saved successfully.")
+            show_message("Supplier saved.")
+        except Exception as error:
+            show_message(f"Error: {error}")
 
-        except Exception as e:
-            show_message(f"Could not save supplier: {e}")
+    def update_supplier_data(e):
+        if editing_id is None:
+            show_message("Pick a supplier first.")
+            return
 
-    def delete_selected_supplier(e):
-        nonlocal selected_supplier_id
+        name = company_name.value.strip()
+        phone_value = phone.value.strip()
+        email_value = email.value.strip()
 
-        if selected_supplier_id is None:
-            show_message("Select a supplier first.")
+        if name == "":
+            show_message("Company name is required.")
             return
 
         try:
-            delete_supplier(selected_supplier_id)
-            selected_supplier_id = None
+            update_supplier(editing_id, name, phone_value, email_value)
+            clear_form()
             load_suppliers()
-            show_message("Supplier deleted successfully.")
-        except Exception as e:
-            show_message(f"Could not delete supplier: {e}")
+            show_message("Supplier updated.")
+        except Exception as error:
+            show_message(f"Error: {error}")
+
+    def remove_supplier(supplier_id):
+        try:
+            delete_supplier(supplier_id)
+            clear_form()
+            load_suppliers()
+            show_message("Supplier deleted.")
+        except Exception as error:
+            show_message(f"Error: {error}")
+
+    def load_suppliers():
+        table_area.controls.clear()
+
+        suppliers = get_suppliers()
+
+        if not suppliers:
+            table_area.controls.append(ft.Text("No suppliers yet."))
+        else:
+            rows = []
+
+            for supplier in suppliers:
+                rows.append(
+                    ft.DataRow(
+                        cells=[
+                            ft.DataCell(ft.Text(str(supplier[0]))),
+                            ft.DataCell(ft.Text(str(supplier[1]))),
+                            ft.DataCell(ft.Text(str(supplier[2]))),
+                            ft.DataCell(ft.Text(str(supplier[3]))),
+                            ft.DataCell(
+                                ft.TextButton(
+                                    "Edit",
+                                    on_click=lambda e, supplier=supplier: fill_form(supplier)
+                                )
+                            ),
+                            ft.DataCell(
+                                ft.TextButton(
+                                    "Delete",
+                                    on_click=lambda e, supplier_id=supplier[0]: remove_supplier(supplier_id)
+                                )
+                            ),
+                        ]
+                    )
+                )
+
+            table_area.controls.append(
+                ft.DataTable(
+                    columns=[
+                        ft.DataColumn(ft.Text("ID")),
+                        ft.DataColumn(ft.Text("Company")),
+                        ft.DataColumn(ft.Text("Phone")),
+                        ft.DataColumn(ft.Text("Email")),
+                        ft.DataColumn(ft.Text("Edit")),
+                        ft.DataColumn(ft.Text("Delete")),
+                    ],
+                    rows=rows
+                )
+            )
+
+        page.update()
 
     load_suppliers()
 
@@ -110,19 +137,18 @@ def suppliers_view(page: ft.Page):
         content=ft.Column(
             controls=[
                 ft.Text("Suppliers", size=22, weight=ft.FontWeight.BOLD),
+                editing_text,
+                ft.Row([company_name, phone, email], wrap=True),
                 ft.Row(
-                    controls=[company_name, phone, email],
+                    [
+                        ft.ElevatedButton("Save", on_click=save_supplier_data),
+                        ft.ElevatedButton("Update", on_click=update_supplier_data),
+                        ft.OutlinedButton("Clear", on_click=clear_form),
+                        ft.OutlinedButton("Refresh", on_click=lambda e: load_suppliers()),
+                    ],
                     wrap=True
                 ),
-                ft.Row(
-                    controls=[
-                        ft.ElevatedButton("Save Supplier", on_click=save_supplier),
-                        ft.OutlinedButton("Refresh Table", on_click=lambda e: load_suppliers()),
-                        ft.FilledButton("Delete Selected", on_click=delete_selected_supplier),
-                    ]
-                ),
                 ft.Divider(),
-                ft.Text("Suppliers List", size=18, weight=ft.FontWeight.BOLD),
                 table_area,
             ],
             scroll=ft.ScrollMode.AUTO
