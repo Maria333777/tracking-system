@@ -1,48 +1,23 @@
 import flet as ft
-from models import get_report_by_category, get_report_by_supplier, get_report_by_month
+from models import get_purchases, get_expenses
 
 def reports_view(page: ft.Page):
-    category_area = ft.Column()
-    supplier_area = ft.Column()
-    month_area = ft.Column()
+    purchases_area = ft.Column()
+    expenses_area = ft.Column()
 
-    def make_table(title, headers, data):
-        if not data:
-            return ft.Column([ft.Text(title, size=18, weight=ft.FontWeight.BOLD), ft.Text("No data yet.")])
+    def load_reports():
+        purchases_area.controls.clear()
+        expenses_area.controls.clear()
 
-        rows = []
-        for row in data:
-            rows.append(
-                ft.DataRow(
-                    cells=[ft.DataCell(ft.Text(str(value))) for value in row]
-                )
-            )
+        purchases = get_purchases()
+        expenses = get_expenses()
 
-        return ft.Column(
-            [
-                ft.Text(title, size=18, weight=ft.FontWeight.BOLD),
-                ft.DataTable(
-                    columns=[ft.DataColumn(ft.Text(h)) for h in headers],
-                    rows=rows
-                )
-            ]
+        purchases_area.controls.append(
+            ft.Text(f"Purchases registered: {len(purchases)}", size=18)
         )
 
-    def load_reports(e=None):
-        category_area.controls.clear()
-        supplier_area.controls.clear()
-        month_area.controls.clear()
-
-        category_area.controls.append(
-            make_table("Expenses by Category", ["Category", "Total"], get_report_by_category())
-        )
-
-        supplier_area.controls.append(
-            make_table("Purchases by Supplier", ["Supplier", "Total"], get_report_by_supplier())
-        )
-
-        month_area.controls.append(
-            make_table("Expenses by Month", ["Month", "Total"], get_report_by_month())
+        expenses_area.controls.append(
+            ft.Text(f"Expenses registered: {len(expenses)}", size=18)
         )
 
         page.update()
@@ -53,15 +28,11 @@ def reports_view(page: ft.Page):
         padding=20,
         content=ft.Column(
             controls=[
-                ft.Text("Reports", size=22, weight=ft.FontWeight.BOLD),
-                ft.ElevatedButton("Refresh", on_click=load_reports),
-                ft.Divider(),
-                category_area,
-                ft.Divider(),
-                supplier_area,
-                ft.Divider(),
-                month_area,
-            ],
-            scroll=ft.ScrollMode.AUTO
+                ft.Text("Reports", size=24, weight=ft.FontWeight.BOLD),
+                ft.Text("Simple Summary", size=18, weight=ft.FontWeight.BOLD),
+                purchases_area,
+                expenses_area,
+                ft.ElevatedButton("Refresh", on_click=lambda e: load_reports())
+            ]
         )
     )

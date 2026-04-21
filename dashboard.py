@@ -1,23 +1,19 @@
 import flet as ft
-from models import get_dashboard_summary
+from models import get_suppliers, get_purchases, get_expenses
 
 def dashboard_view(page: ft.Page):
-    purchases_text = ft.Text("Total Purchases: 0.00", size=18)
-    expenses_text = ft.Text("Total Expenses: 0.00", size=18)
-    suppliers_text = ft.Text("Number of Suppliers: 0", size=18)
-    total_text = ft.Text("Total Money Tracked: 0.00", size=18, weight=ft.FontWeight.BOLD)
+    suppliers_text = ft.Text(size=20, weight=ft.FontWeight.BOLD)
+    purchases_text = ft.Text(size=20, weight=ft.FontWeight.BOLD)
+    expenses_text = ft.Text(size=20, weight=ft.FontWeight.BOLD)
 
-    def load_dashboard(e=None):
-        data = get_dashboard_summary()
+    def load_dashboard():
+        suppliers = get_suppliers()
+        purchases = get_purchases()
+        expenses = get_expenses()
 
-        purchases = float(data["total_purchases"])
-        expenses = float(data["total_expenses"])
-        suppliers = int(data["suppliers_count"])
-
-        purchases_text.value = f"Total Purchases: {purchases:.2f}"
-        expenses_text.value = f"Total Expenses: {expenses:.2f}"
-        suppliers_text.value = f"Number of Suppliers: {suppliers}"
-        total_text.value = f"Total Money Tracked: {purchases + expenses:.2f}"
+        suppliers_text.value = f"Number of Suppliers: {len(suppliers)}"
+        purchases_text.value = f"Total Purchases: {len(purchases)}"
+        expenses_text.value = f"Total Expenses: {len(expenses)}"
 
         page.update()
 
@@ -27,12 +23,11 @@ def dashboard_view(page: ft.Page):
         padding=20,
         content=ft.Column(
             controls=[
-                ft.Text("Dashboard", size=22, weight=ft.FontWeight.BOLD),
+                ft.Text("Dashboard", size=24, weight=ft.FontWeight.BOLD),
+                suppliers_text,
                 purchases_text,
                 expenses_text,
-                suppliers_text,
-                total_text,
-                ft.ElevatedButton("Refresh", on_click=load_dashboard),
+                ft.ElevatedButton("Refresh", on_click=lambda e: load_dashboard())
             ]
         )
     )
