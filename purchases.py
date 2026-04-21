@@ -1,3 +1,4 @@
+import datetime
 import flet as ft
 from models import add_purchase, get_purchases, get_suppliers
 
@@ -6,26 +7,36 @@ def purchases_view(page: ft.Page):
     item_name = ft.TextField(label="Item Name", width=200)
     quantity = ft.TextField(label="Quantity", width=150)
     unit_cost = ft.TextField(label="Unit Cost", width=150)
-    purchase_date = ft.TextField(label="Purchase Date (YYYY-MM-DD)", width=220)
-
-    status = ft.Dropdown(
-        label="Status",
-        width=180,
-        options=[
-            ft.dropdown.Option("Paid"),
-            ft.dropdown.Option("Pending"),
-            ft.dropdown.Option("Approved"),
-        ]
-    )
+    purchase_date = ft.TextField(label="Purchase Date", width=180, read_only=True)
+    status = ft.TextField(label="Status", width=180)
 
     total_text = ft.Text("Total Cost: 0.00", size=16, weight=ft.FontWeight.BOLD)
     table_area = ft.Column()
     suppliers_map = {}
 
+    today = datetime.datetime.now()
+
     def show_message(text):
         page.snack_bar = ft.SnackBar(ft.Text(text))
         page.snack_bar.open = True
         page.update()
+
+    def handle_purchase_date_change(e):
+        purchase_date.value = e.control.value.strftime("%Y-%m-%d")
+        page.update()
+
+    def handle_purchase_date_dismissal(e):
+        page.update()
+
+    purchase_picker = ft.DatePicker(
+        first_date=datetime.datetime(year=today.year - 1, month=1, day=1),
+        last_date=datetime.datetime(year=today.year + 1, month=12, day=31),
+        on_change=handle_purchase_date_change,
+        on_dismiss=handle_purchase_date_dismissal,
+    )
+
+    def open_purchase_picker(e):
+        page.show_dialog(purchase_picker)
 
     def load_suppliers():
         suppliers_map.clear()
@@ -104,14 +115,14 @@ def purchases_view(page: ft.Page):
         supplier_name = supplier_input.value.strip()
         item = item_name.value.strip()
         date = purchase_date.value.strip()
-        purchase_status = status.value
+        purchase_status = status.value.strip()
 
         if not supplier_name or not item or not date:
             show_message("Fill all required fields.")
             return
 
         if supplier_name not in suppliers_map:
-            show_message("That supplier does not exist. Write the exact supplier name from Suppliers.")
+            show_message("That supplier does not exist.")
             return
 
         try:
@@ -138,7 +149,7 @@ def purchases_view(page: ft.Page):
             quantity.value = ""
             unit_cost.value = ""
             purchase_date.value = ""
-            status.value = None
+            status.value = ""
             total_text.value = "Total Cost: 0.00"
 
             load_purchases()
@@ -169,7 +180,17 @@ def purchases_view(page: ft.Page):
                 ),
 
                 ft.Row(
-                    controls=[quantity, unit_cost, purchase_date, status],
+                    controls=[
+                        quantity,
+                        unit_cost,
+                        purchase_date,
+                        ft.ElevatedButton(
+                            text="Pick date",
+                            icon=ft.Icons.CALENDAR_MONTH,
+                            on_click=open_purchase_picker,
+                        ),
+                        status
+                    ],
                     wrap=True
                 ),
 

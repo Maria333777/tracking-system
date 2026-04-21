@@ -1,3 +1,4 @@
+import datetime
 import flet as ft
 from models import add_expense, get_expenses, update_expense, delete_expense
 
@@ -5,7 +6,7 @@ def expenses_view(page: ft.Page):
     category = ft.TextField(label="Category", width=180)
     description = ft.TextField(label="Description", width=240)
     amount = ft.TextField(label="Amount", width=120)
-    expense_date = ft.TextField(label="Expense Date", hint_text="YYYY-MM-DD", width=180)
+    expense_date = ft.TextField(label="Expense Date", width=180, read_only=True)
     payment_method = ft.TextField(label="Payment Method", width=180)
     status = ft.TextField(label="Status", width=150)
 
@@ -13,10 +14,29 @@ def expenses_view(page: ft.Page):
     editing_text = ft.Text("Editing: none")
     table_area = ft.Column()
 
+    today = datetime.datetime.now()
+
     def show_message(text):
         page.snack_bar = ft.SnackBar(ft.Text(text))
         page.snack_bar.open = True
         page.update()
+
+    def handle_expense_date_change(e):
+        expense_date.value = e.control.value.strftime("%Y-%m-%d")
+        page.update()
+
+    def handle_expense_date_dismissal(e):
+        page.update()
+
+    expense_picker = ft.DatePicker(
+        first_date=datetime.datetime(year=today.year - 1, month=1, day=1),
+        last_date=datetime.datetime(year=today.year + 1, month=12, day=31),
+        on_change=handle_expense_date_change,
+        on_dismiss=handle_expense_date_dismissal,
+    )
+
+    def open_expense_picker(e):
+        page.show_dialog(expense_picker)
 
     def clear_form(e=None):
         nonlocal editing_id
@@ -184,7 +204,19 @@ def expenses_view(page: ft.Page):
                 ft.Text("Expenses", size=22, weight=ft.FontWeight.BOLD),
                 editing_text,
                 ft.Row([category, description, amount], wrap=True),
-                ft.Row([expense_date, payment_method, status], wrap=True),
+                ft.Row(
+                    [
+                        expense_date,
+                        ft.ElevatedButton(
+                            text="Pick date",
+                            icon=ft.Icons.CALENDAR_MONTH,
+                            on_click=open_expense_picker,
+                        ),
+                        payment_method,
+                        status
+                    ],
+                    wrap=True
+                ),
                 ft.Row(
                     [
                         ft.ElevatedButton("Save", on_click=save_expense_data),
