@@ -21,11 +21,11 @@ def purchases_view(page: ft.Page):
         page.snack_bar.open = True
         page.update()
 
-    def handle_purchase_date_change(e: ft.Event[ft.DatePicker]):
+    def handle_purchase_date_change(e):
         purchase_date.value = e.control.value.strftime("%Y-%m-%d")
         page.update()
 
-    def handle_purchase_date_dismissal(e: ft.Event[ft.DialogControl]):
+    def handle_purchase_date_dismissal(e):
         page.update()
 
     purchase_picker = ft.DatePicker(
@@ -40,12 +40,15 @@ def purchases_view(page: ft.Page):
 
     def load_suppliers():
         suppliers_map.clear()
+
         try:
             suppliers = get_suppliers()
+
             for supplier in suppliers:
                 supplier_id = supplier[0]
                 company_name = supplier[1]
                 suppliers_map[company_name] = supplier_id
+
         except Exception as e:
             show_message(f"Could not load suppliers: {e}")
 
@@ -53,9 +56,11 @@ def purchases_view(page: ft.Page):
         try:
             qty = float(quantity.value)
             cost = float(unit_cost.value)
-            total_text.value = f"Total Cost: {qty * cost:.2f}"
+            total = qty * cost
+            total_text.value = f"Total Cost: {total:.2f}"
         except:
             total_text.value = "Total Cost: 0.00"
+
         page.update()
 
     def load_purchases():

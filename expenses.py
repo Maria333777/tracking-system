@@ -21,11 +21,11 @@ def expenses_view(page: ft.Page):
         page.snack_bar.open = True
         page.update()
 
-    def handle_expense_date_change(e: ft.Event[ft.DatePicker]):
+    def handle_expense_date_change(e):
         expense_date.value = e.control.value.strftime("%Y-%m-%d")
         page.update()
 
-    def handle_expense_date_dismissal(e: ft.Event[ft.DialogControl]):
+    def handle_expense_date_dismissal(e):
         page.update()
 
     expense_picker = ft.DatePicker(
@@ -223,8 +223,7 @@ def expenses_view(page: ft.Page):
                         ft.ElevatedButton("Update", on_click=update_expense_data),
                         ft.OutlinedButton("Clear", on_click=clear_form),
                         ft.OutlinedButton("Refresh", on_click=refresh_table),
-                    ],
-                    wrap=True
+                    ]
                 ),
                 ft.Divider(),
                 table_area,
