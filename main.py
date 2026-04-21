@@ -13,6 +13,7 @@ def main(page: ft.Page):
     page.window_width = 1000
     page.window_height = 650
     page.padding = 20
+    page.theme_mode = ft.ThemeMode.DARK
     page.scroll = "auto"
 
     title = ft.Text(
@@ -25,26 +26,11 @@ def main(page: ft.Page):
         selected_index=0,
         expand=1,
         tabs=[
-            ft.Tab(
-                text="Dashboard",
-                content=dashboard_view(page)
-            ),
-            ft.Tab(
-                text="Suppliers",
-                content=suppliers_view(page)
-            ),
-            ft.Tab(
-                text="Purchases",
-                content=purchases_view(page)
-            ),
-            ft.Tab(
-                text="Expenses",
-                content=expenses_view(page)
-            ),
-            ft.Tab(
-                text="Reports",
-                content=reports_view(page)
-            ),
+            ft.Tab(text="Dashboard", content=dashboard_view(page)),
+            ft.Tab(text="Suppliers", content=suppliers_view(page)),
+            ft.Tab(text="Purchases", content=purchases_view(page)),
+            ft.Tab(text="Expenses", content=expenses_view(page)),
+            ft.Tab(text="Reports", content=reports_view(page)),
         ],
     )
 
