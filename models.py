@@ -1,6 +1,6 @@
 from database import connect_db
 
-# ---------------- SUPPLIERS ----------------
+# ---------- SUPPLIERS ----------
 def add_supplier(company_name, phone, email):
     conn = connect_db()
     cursor = conn.cursor()
@@ -23,15 +23,8 @@ def get_suppliers():
     conn.close()
     return data
 
-def delete_supplier(supplier_id):
-    conn = connect_db()
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM suppliers WHERE id = ?", (supplier_id,))
-    conn.commit()
-    conn.close()
 
-
-# ---------------- PURCHASES ----------------
+# ---------- PURCHASES ----------
 def add_purchase(supplier_id, item_name, quantity, unit_cost, purchase_date, status):
     total_cost = quantity * unit_cost
 
@@ -61,15 +54,8 @@ def get_purchases():
     conn.close()
     return data
 
-def delete_purchase(purchase_id):
-    conn = connect_db()
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM purchases WHERE id = ?", (purchase_id,))
-    conn.commit()
-    conn.close()
 
-
-# ---------------- EXPENSES ----------------
+# ---------- EXPENSES ----------
 def add_expense(category, description, amount, expense_date, payment_method, status):
     conn = connect_db()
     cursor = conn.cursor()
@@ -91,77 +77,6 @@ def get_expenses():
                expense_date, payment_method, status
         FROM expenses
         ORDER BY id DESC
-    """)
-    data = cursor.fetchall()
-    conn.close()
-    return data
-
-def delete_expense(expense_id):
-    conn = connect_db()
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM expenses WHERE id = ?", (expense_id,))
-    conn.commit()
-    conn.close()
-
-
-# ---------------- DASHBOARD ----------------
-def get_dashboard_summary():
-    conn = connect_db()
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT COUNT(*) FROM suppliers")
-    suppliers_count = cursor.fetchone()[0]
-
-    cursor.execute("SELECT COALESCE(SUM(total_cost), 0) FROM purchases")
-    total_purchases = cursor.fetchone()[0]
-
-    cursor.execute("SELECT COALESCE(SUM(amount), 0) FROM expenses")
-    total_expenses = cursor.fetchone()[0]
-
-    conn.close()
-
-    return {
-        "suppliers_count": suppliers_count,
-        "total_purchases": total_purchases,
-        "total_expenses": total_expenses
-    }
-
-
-# ---------------- REPORTS ----------------
-def get_report_by_category():
-    conn = connect_db()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT category, ROUND(SUM(amount), 2) AS total
-        FROM expenses
-        GROUP BY category
-        ORDER BY total DESC
-    """)
-    data = cursor.fetchall()
-    conn.close()
-    return data
-
-def get_report_by_supplier():
-    conn = connect_db()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT s.company_name, ROUND(COALESCE(SUM(p.total_cost), 0), 2) AS total
-        FROM suppliers s
-        LEFT JOIN purchases p ON s.id = p.supplier_id
-        GROUP BY s.id, s.company_name
-        ORDER BY total DESC
-    """)
-    data = cursor.fetchall()
-    conn.close()
-    return data
-
-def get_report_by_month():
-    conn = connect_db()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT month, ROUND(total_expenses, 2)
-        FROM monthly_expense_summary
-        ORDER BY month DESC
     """)
     data = cursor.fetchall()
     conn.close()
