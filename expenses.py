@@ -1,3 +1,5 @@
+# expenses.py
+
 import datetime
 import flet as ft
 from models import add_expense, get_expenses, update_expense, delete_expense
@@ -26,18 +28,23 @@ def expenses_view(page: ft.Page):
             expense_date.value = e.control.value.strftime("%Y-%m-%d")
             page.update()
 
+    def close_expense_picker(e):
+        expense_picker.open = False
+        page.update()
+
     expense_picker = ft.DatePicker(
-        first_date=datetime.datetime(year=today.year - 1, month=1, day=1),
-        last_date=datetime.datetime(year=today.year + 1, month=12, day=31),
-        entry_mode=ft.DatePickerEntryMode.INPUT,
-        field_hint_text="yyyy-mm-dd",
-        field_label_text="Enter expense date",
-        help_text="Select expense date",
+        first_date=datetime.datetime(today.year - 1, 1, 1),
+        last_date=datetime.datetime(today.year + 1, 12, 31),
+        value=today,
         on_change=set_expense_date,
+        on_dismiss=close_expense_picker,
     )
 
+    page.overlay.append(expense_picker)
+
     def open_expense_picker(e):
-        page.show_dialog(expense_picker)
+        expense_picker.open = True
+        page.update()
 
     def clear_form(e=None):
         nonlocal editing_id
@@ -224,9 +231,9 @@ def expenses_view(page: ft.Page):
                 ft.Row(
                     controls=[
                         expense_date,
-                        ft.Button(
+                        ft.ElevatedButton(
+                            "Pick date",
                             icon=ft.Icons.CALENDAR_MONTH,
-                            content="Pick date",
                             on_click=open_expense_picker,
                         ),
                         payment_method,

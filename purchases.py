@@ -1,3 +1,5 @@
+# purchases.py
+
 import datetime
 import flet as ft
 from models import add_purchase, get_purchases, get_suppliers
@@ -12,8 +14,8 @@ def purchases_view(page: ft.Page):
 
     total_text = ft.Text("Total Cost: 0", size=16, weight=ft.FontWeight.BOLD)
     table_area = ft.Column()
-    suppliers_map = {}
 
+    suppliers_map = {}
     today = datetime.datetime.now()
 
     def show_message(text):
@@ -26,18 +28,23 @@ def purchases_view(page: ft.Page):
             purchase_date.value = e.control.value.strftime("%Y-%m-%d")
             page.update()
 
+    def close_purchase_picker(e):
+        purchase_picker.open = False
+        page.update()
+
     purchase_picker = ft.DatePicker(
-        first_date=datetime.datetime(year=today.year - 1, month=1, day=1),
-        last_date=datetime.datetime(year=today.year + 1, month=12, day=31),
-        entry_mode=ft.DatePickerEntryMode.INPUT,
-        field_hint_text="yyyy-mm-dd",
-        field_label_text="Enter purchase date",
-        help_text="Select purchase date",
+        first_date=datetime.datetime(today.year - 1, 1, 1),
+        last_date=datetime.datetime(today.year + 1, 12, 31),
+        value=today,
         on_change=set_purchase_date,
+        on_dismiss=close_purchase_picker,
     )
 
+    page.overlay.append(purchase_picker)
+
     def open_purchase_picker(e):
-        page.show_dialog(purchase_picker)
+        purchase_picker.open = True
+        page.update()
 
     def load_suppliers():
         suppliers_map.clear()
@@ -184,9 +191,9 @@ def purchases_view(page: ft.Page):
                         quantity,
                         unit_cost,
                         purchase_date,
-                        ft.Button(
+                        ft.ElevatedButton(
+                            "Pick date",
                             icon=ft.Icons.CALENDAR_MONTH,
-                            content="Pick date",
                             on_click=open_purchase_picker,
                         ),
                         status,
