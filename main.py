@@ -6,15 +6,6 @@ from expenses import expenses_view
 from dashboard import dashboard_view
 from reports import reports_view
 
-def section_box(content):
-    return ft.Container(
-        padding=20,
-        border_radius=18,
-        bgcolor="#111827",
-        border=ft.border.all(1, "#1f2937"),
-        content=content,
-    )
-
 def main(page: ft.Page):
     create_tables()
 
@@ -57,29 +48,29 @@ def main(page: ft.Page):
         unselected_label_color="#d1d5db",
         indicator_color="#60a5fa",
         divider_color="#334155",
+        expand=1,
         tabs=[
             ft.Tab(
                 text="Dashboard",
-                content=section_box(dashboard_view(page))
+                content=dashboard_view(page)
             ),
             ft.Tab(
                 text="Suppliers",
-                content=section_box(suppliers_view(page))
+                content=suppliers_view(page)
             ),
             ft.Tab(
                 text="Purchases",
-                content=section_box(purchases_view(page))
+                content=purchases_view(page)
             ),
             ft.Tab(
                 text="Expenses",
-                content=section_box(expenses_view(page))
+                content=expenses_view(page)
             ),
             ft.Tab(
                 text="Reports",
-                content=section_box(reports_view(page))
+                content=reports_view(page)
             ),
         ],
-        expand=1,
     )
 
     page.add(
