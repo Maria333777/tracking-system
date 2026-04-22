@@ -1,16 +1,43 @@
-# expenses.py
-
 import datetime
 import flet as ft
 from models import add_expense, get_expenses, update_expense, delete_expense
 
 def expenses_view(page: ft.Page):
-    category = ft.TextField(label="Category", width=180)
+    category = ft.Dropdown(
+        label="Category",
+        width=180,
+        options=[
+            ft.dropdown.Option("Office Supplies"),
+            ft.dropdown.Option("Transport"),
+            ft.dropdown.Option("Maintenance"),
+            ft.dropdown.Option("Utilities"),
+            ft.dropdown.Option("Other"),
+        ],
+    )
+
     description = ft.TextField(label="Description", width=220)
     amount = ft.TextField(label="Amount", width=120)
     expense_date = ft.TextField(label="Expense Date", width=180, read_only=True)
-    payment_method = ft.TextField(label="Payment Method", width=180)
-    status = ft.TextField(label="Status", width=150)
+
+    payment_method = ft.Dropdown(
+        label="Payment Method",
+        width=180,
+        options=[
+            ft.dropdown.Option("Cash"),
+            ft.dropdown.Option("Card"),
+            ft.dropdown.Option("Transfer"),
+        ],
+    )
+
+    status = ft.Dropdown(
+        label="Status",
+        width=150,
+        options=[
+            ft.dropdown.Option("Paid"),
+            ft.dropdown.Option("Pending"),
+            ft.dropdown.Option("Approved"),
+        ],
+    )
 
     editing_id = None
     editing_text = ft.Text("Editing: none")
@@ -49,35 +76,35 @@ def expenses_view(page: ft.Page):
     def clear_form(e=None):
         nonlocal editing_id
         editing_id = None
-        category.value = ""
+        category.value = None
         description.value = ""
         amount.value = ""
         expense_date.value = ""
-        payment_method.value = ""
-        status.value = ""
+        payment_method.value = None
+        status.value = None
         editing_text.value = "Editing: none"
         page.update()
 
     def fill_form(expense):
         nonlocal editing_id
         editing_id = expense[0]
-        category.value = expense[1] or ""
+        category.value = expense[1] if expense[1] else None
         description.value = expense[2] or ""
         amount.value = str(expense[3])
         expense_date.value = expense[4] or ""
-        payment_method.value = expense[5] or ""
-        status.value = expense[6] or ""
+        payment_method.value = expense[5] if expense[5] else None
+        status.value = expense[6] if expense[6] else None
         editing_text.value = f"Editing expense ID: {editing_id}"
         page.update()
 
     def save_expense(e):
-        cat = category.value.strip()
+        cat = category.value
         desc = description.value.strip()
         date = expense_date.value.strip()
-        pay = payment_method.value.strip()
-        stat = status.value.strip()
+        pay = payment_method.value
+        stat = status.value
 
-        if cat == "" or desc == "" or date == "":
+        if not cat or not desc or not date:
             show_message("Fill all required fields.")
             return
 
@@ -93,7 +120,6 @@ def expenses_view(page: ft.Page):
 
         try:
             add_expense(cat, desc, amount_value, date, pay, stat)
-
             clear_form()
             load_expenses()
             show_message("Expense saved.")
@@ -105,13 +131,13 @@ def expenses_view(page: ft.Page):
             show_message("Pick an expense first.")
             return
 
-        cat = category.value.strip()
+        cat = category.value
         desc = description.value.strip()
         date = expense_date.value.strip()
-        pay = payment_method.value.strip()
-        stat = status.value.strip()
+        pay = payment_method.value
+        stat = status.value
 
-        if cat == "" or desc == "" or date == "":
+        if not cat or not desc or not date:
             show_message("Fill all required fields.")
             return
 
@@ -127,7 +153,6 @@ def expenses_view(page: ft.Page):
 
         try:
             update_expense(editing_id, cat, desc, amount_value, date, pay, stat)
-
             clear_form()
             load_expenses()
             show_message("Expense updated.")

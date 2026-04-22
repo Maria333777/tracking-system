@@ -1,21 +1,28 @@
-# purchases.py
-
 import datetime
 import flet as ft
 from models import add_purchase, get_purchases, get_suppliers
 
 def purchases_view(page: ft.Page):
-    supplier_name = ft.TextField(label="Supplier Name", width=220)
+    supplier_name = ft.Dropdown(label="Supplier", width=220)
     item_name = ft.TextField(label="Item Name", width=200)
     quantity = ft.TextField(label="Quantity", width=120)
     unit_cost = ft.TextField(label="Unit Cost", width=120)
     purchase_date = ft.TextField(label="Purchase Date", width=180, read_only=True)
-    status = ft.TextField(label="Status", width=150)
+
+    status = ft.Dropdown(
+        label="Status",
+        width=150,
+        options=[
+            ft.dropdown.Option("Paid"),
+            ft.dropdown.Option("Pending"),
+            ft.dropdown.Option("Approved"),
+        ],
+    )
 
     total_text = ft.Text("Total Cost: 0", size=16, weight=ft.FontWeight.BOLD)
     table_area = ft.Column()
-
     suppliers_map = {}
+
     today = datetime.datetime.now()
 
     def show_message(text):
@@ -47,14 +54,21 @@ def purchases_view(page: ft.Page):
         page.update()
 
     def load_suppliers():
+        supplier_name.options.clear()
         suppliers_map.clear()
 
         try:
             suppliers = get_suppliers()
+
             for supplier in suppliers:
                 supplier_id = supplier[0]
                 company = supplier[1]
+
                 suppliers_map[company] = supplier_id
+                supplier_name.options.append(ft.dropdown.Option(company))
+
+            page.update()
+
         except Exception as error:
             show_message(f"Error loading suppliers: {error}")
 
@@ -117,12 +131,12 @@ def purchases_view(page: ft.Page):
             show_message(f"Error loading purchases: {error}")
 
     def save_purchase(e):
-        supplier = supplier_name.value.strip()
+        supplier = supplier_name.value
         item = item_name.value.strip()
         date = purchase_date.value.strip()
-        stat = status.value.strip()
+        stat = status.value
 
-        if supplier == "" or item == "" or date == "":
+        if not supplier or item == "" or date == "":
             show_message("Fill all required fields.")
             return
 
@@ -153,12 +167,12 @@ def purchases_view(page: ft.Page):
                 stat
             )
 
-            supplier_name.value = ""
+            supplier_name.value = None
             item_name.value = ""
             quantity.value = ""
             unit_cost.value = ""
             purchase_date.value = ""
-            status.value = ""
+            status.value = None
             total_text.value = "Total Cost: 0"
 
             load_purchases()
@@ -169,6 +183,7 @@ def purchases_view(page: ft.Page):
             show_message(f"Error saving purchase: {error}")
 
     def refresh_table(e):
+        load_suppliers()
         load_purchases()
 
     quantity.on_change = calculate_total
