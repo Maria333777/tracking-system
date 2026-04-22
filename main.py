@@ -6,37 +6,89 @@ from expenses import expenses_view
 from dashboard import dashboard_view
 from reports import reports_view
 
+def section_box(content):
+    return ft.Container(
+        padding=20,
+        border_radius=18,
+        bgcolor="#111827",
+        border=ft.border.all(1, "#1f2937"),
+        content=content,
+    )
+
 def main(page: ft.Page):
     create_tables()
 
     page.title = "Company Purchase and Expense Tracking System"
-    page.window_width = 1000
-    page.window_height = 650
+    page.window_width = 1200
+    page.window_height = 760
     page.padding = 20
     page.theme_mode = ft.ThemeMode.DARK
+    page.bgcolor = "#0b1220"
     page.scroll = "auto"
 
     title = ft.Text(
         "Company Purchase and Expense Tracking System",
-        size=24,
-        weight=ft.FontWeight.BOLD
+        size=28,
+        weight=ft.FontWeight.BOLD,
+        color="white"
+    )
+
+    subtitle = ft.Text(
+        "Manage suppliers, purchases, expenses and reports in one place.",
+        size=14,
+        color="#9ca3af"
+    )
+
+    header = ft.Container(
+        padding=20,
+        border_radius=20,
+        bgcolor="#111827",
+        border=ft.border.all(1, "#1f2937"),
+        content=ft.Column(
+            controls=[title, subtitle],
+            spacing=6
+        )
     )
 
     tabs = ft.Tabs(
         selected_index=0,
-        expand=1,
+        animation_duration=300,
+        label_color="#93c5fd",
+        unselected_label_color="#d1d5db",
+        indicator_color="#60a5fa",
+        divider_color="#334155",
         tabs=[
-            ft.Tab(text="Dashboard", content=dashboard_view(page)),
-            ft.Tab(text="Suppliers", content=suppliers_view(page)),
-            ft.Tab(text="Purchases", content=purchases_view(page)),
-            ft.Tab(text="Expenses", content=expenses_view(page)),
-            ft.Tab(text="Reports", content=reports_view(page)),
+            ft.Tab(
+                text="Dashboard",
+                content=section_box(dashboard_view(page))
+            ),
+            ft.Tab(
+                text="Suppliers",
+                content=section_box(suppliers_view(page))
+            ),
+            ft.Tab(
+                text="Purchases",
+                content=section_box(purchases_view(page))
+            ),
+            ft.Tab(
+                text="Expenses",
+                content=section_box(expenses_view(page))
+            ),
+            ft.Tab(
+                text="Reports",
+                content=section_box(reports_view(page))
+            ),
         ],
+        expand=1,
     )
 
     page.add(
         ft.Column(
-            controls=[title, tabs],
+            controls=[
+                header,
+                tabs
+            ],
+            spacing=20,
             expand=True
         )
     )
