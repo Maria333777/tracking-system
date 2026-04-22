@@ -3,14 +3,14 @@ import flet as ft
 from models import add_purchase, get_purchases, get_suppliers
 
 def purchases_view(page: ft.Page):
-    supplier_input = ft.TextField(label="Supplier Name", width=220)
+    supplier_name = ft.TextField(label="Supplier Name", width=220)
     item_name = ft.TextField(label="Item Name", width=200)
-    quantity = ft.TextField(label="Quantity", width=150)
-    unit_cost = ft.TextField(label="Unit Cost", width=150)
+    quantity = ft.TextField(label="Quantity", width=120)
+    unit_cost = ft.TextField(label="Unit Cost", width=120)
     purchase_date = ft.TextField(label="Purchase Date", width=180, read_only=True)
-    status = ft.TextField(label="Status", width=180)
+    status = ft.TextField(label="Status", width=150)
 
-    total_text = ft.Text("Total Cost: 0.00", size=16, weight=ft.FontWeight.BOLD)
+    total_text = ft.Text("Total Cost: 0", size=16, weight=ft.FontWeight.BOLD)
     table_area = ft.Column()
     suppliers_map = {}
 
@@ -21,18 +21,19 @@ def purchases_view(page: ft.Page):
         page.snack_bar.open = True
         page.update()
 
-    def handle_purchase_date_change(e):
-        purchase_date.value = e.control.value.strftime("%Y-%m-%d")
-        page.update()
-
-    def handle_purchase_date_dismissal(e):
-        page.update()
+    def set_purchase_date(e):
+        if e.control.value:
+            purchase_date.value = e.control.value.strftime("%Y-%m-%d")
+            page.update()
 
     purchase_picker = ft.DatePicker(
         first_date=datetime.datetime(year=today.year - 1, month=1, day=1),
-        last_date=datetime.datetime(year=today.year + 1, month=today.month, day=20),
-        on_change=handle_purchase_date_change,
-        on_dismiss=handle_purchase_date_dismissal,
+        last_date=datetime.datetime(year=today.year + 1, month=12, day=31),
+        entry_mode=ft.DatePickerEntryMode.INPUT,
+        field_hint_text="yyyy-mm-dd",
+        field_label_text="Enter purchase date",
+        help_text="Select purchase date",
+        on_change=set_purchase_date,
     )
 
     def open_purchase_picker(e):
@@ -43,23 +44,20 @@ def purchases_view(page: ft.Page):
 
         try:
             suppliers = get_suppliers()
-
             for supplier in suppliers:
                 supplier_id = supplier[0]
-                company_name = supplier[1]
-                suppliers_map[company_name] = supplier_id
-
-        except Exception as e:
-            show_message(f"Could not load suppliers: {e}")
+                company = supplier[1]
+                suppliers_map[company] = supplier_id
+        except Exception as error:
+            show_message(f"Error loading suppliers: {error}")
 
     def calculate_total(e=None):
         try:
-            qty = float(quantity.value)
-            cost = float(unit_cost.value)
-            total = qty * cost
-            total_text.value = f"Total Cost: {total:.2f}"
+            qty = int(quantity.value)
+            cost = int(unit_cost.value)
+            total_text.value = f"Total Cost: {qty * cost}"
         except:
-            total_text.value = "Total Cost: 0.00"
+            total_text.value = "Total Cost: 0"
 
         page.update()
 
@@ -67,14 +65,14 @@ def purchases_view(page: ft.Page):
         table_area.controls.clear()
 
         try:
-            purchases_list = get_purchases()
+            purchases = get_purchases()
 
-            if not purchases_list:
-                table_area.controls.append(ft.Text("No purchases saved yet."))
+            if not purchases:
+                table_area.controls.append(ft.Text("No purchases yet."))
             else:
                 rows = []
 
-                for purchase in purchases_list:
+                for purchase in purchases:
                     rows.append(
                         ft.DataRow(
                             cells=[
@@ -102,38 +100,42 @@ def purchases_view(page: ft.Page):
                             ft.DataColumn(ft.Text("Date")),
                             ft.DataColumn(ft.Text("Status")),
                         ],
-                        rows=rows
+                        rows=rows,
                     )
                 )
 
             page.update()
 
-        except Exception as e:
-            show_message(f"Could not load purchases: {e}")
+        except Exception as error:
+            show_message(f"Error loading purchases: {error}")
 
     def save_purchase(e):
-        supplier_name = supplier_input.value.strip()
+        supplier = supplier_name.value.strip()
         item = item_name.value.strip()
         date = purchase_date.value.strip()
-        purchase_status = status.value.strip()
+        stat = status.value.strip()
 
-        if not supplier_name or not item or not date:
+        if supplier == "" or item == "" or date == "":
             show_message("Fill all required fields.")
             return
 
-        if supplier_name not in suppliers_map:
+        if supplier not in suppliers_map:
             show_message("That supplier does not exist.")
             return
 
         try:
-            qty = float(quantity.value)
-            cost = float(unit_cost.value)
+            qty = int(quantity.value)
+            cost = int(unit_cost.value)
+        except:
+            show_message("Quantity and Unit Cost must be whole numbers.")
+            return
 
-            if qty <= 0 or cost <= 0:
-                show_message("Quantity and Unit Cost must be positive.")
-                return
+        if qty <= 0 or cost <= 0:
+            show_message("Quantity and Unit Cost must be positive.")
+            return
 
-            supplier_id = suppliers_map[supplier_name]
+        try:
+            supplier_id = suppliers_map[supplier]
 
             add_purchase(
                 supplier_id,
@@ -141,23 +143,23 @@ def purchases_view(page: ft.Page):
                 qty,
                 cost,
                 date,
-                purchase_status
+                stat
             )
 
-            supplier_input.value = ""
+            supplier_name.value = ""
             item_name.value = ""
             quantity.value = ""
             unit_cost.value = ""
             purchase_date.value = ""
             status.value = ""
-            total_text.value = "Total Cost: 0.00"
+            total_text.value = "Total Cost: 0"
 
             load_purchases()
-            show_message("Purchase saved successfully.")
+            show_message("Purchase saved.")
             page.update()
 
-        except Exception as e:
-            show_message(f"Could not save purchase: {e}")
+        except Exception as error:
+            show_message(f"Error saving purchase: {error}")
 
     def refresh_table(e):
         load_purchases()
@@ -174,7 +176,7 @@ def purchases_view(page: ft.Page):
             controls=[
                 ft.Text("Purchases", size=22, weight=ft.FontWeight.BOLD),
                 ft.Row(
-                    controls=[supplier_input, item_name],
+                    controls=[supplier_name, item_name],
                     wrap=True
                 ),
                 ft.Row(
@@ -182,9 +184,9 @@ def purchases_view(page: ft.Page):
                         quantity,
                         unit_cost,
                         purchase_date,
-                        ft.ElevatedButton(
-                            "Pick date",
+                        ft.Button(
                             icon=ft.Icons.CALENDAR_MONTH,
+                            content="Pick date",
                             on_click=open_purchase_picker,
                         ),
                         status,
