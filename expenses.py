@@ -4,7 +4,7 @@ from models import add_expense, get_expenses, update_expense, delete_expense
 
 def expenses_view(page: ft.Page):
     category = ft.TextField(label="Category", width=180)
-    description = ft.TextField(label="Description", width=240)
+    description = ft.TextField(label="Description", width=220)
     amount = ft.TextField(label="Amount", width=120)
     expense_date = ft.TextField(label="Expense Date", width=180, read_only=True)
     payment_method = ft.TextField(label="Payment Method", width=180)
@@ -21,18 +21,19 @@ def expenses_view(page: ft.Page):
         page.snack_bar.open = True
         page.update()
 
-    def handle_expense_date_change(e):
-        expense_date.value = e.control.value.strftime("%Y-%m-%d")
-        page.update()
-
-    def handle_expense_date_dismissal(e):
-        page.update()
+    def set_expense_date(e):
+        if e.control.value:
+            expense_date.value = e.control.value.strftime("%Y-%m-%d")
+            page.update()
 
     expense_picker = ft.DatePicker(
         first_date=datetime.datetime(year=today.year - 1, month=1, day=1),
-        last_date=datetime.datetime(year=today.year + 1, month=today.month, day=20),
-        on_change=handle_expense_date_change,
-        on_dismiss=handle_expense_date_dismissal,
+        last_date=datetime.datetime(year=today.year + 1, month=12, day=31),
+        entry_mode=ft.DatePickerEntryMode.INPUT,
+        field_hint_text="yyyy-mm-dd",
+        field_label_text="Enter expense date",
+        help_text="Select expense date",
+        on_change=set_expense_date,
     )
 
     def open_expense_picker(e):
@@ -62,31 +63,35 @@ def expenses_view(page: ft.Page):
         editing_text.value = f"Editing expense ID: {editing_id}"
         page.update()
 
-    def save_expense_data(e):
+    def save_expense(e):
         cat = category.value.strip()
         desc = description.value.strip()
         date = expense_date.value.strip()
         pay = payment_method.value.strip()
         stat = status.value.strip()
 
-        if not cat or not desc or not date:
+        if cat == "" or desc == "" or date == "":
             show_message("Fill all required fields.")
             return
 
         try:
-            amount_value = float(amount.value)
+            amount_value = int(amount.value)
+        except:
+            show_message("Amount must be a whole number.")
+            return
 
-            if amount_value <= 0:
-                show_message("Amount must be positive.")
-                return
+        if amount_value <= 0:
+            show_message("Amount must be positive.")
+            return
 
+        try:
             add_expense(cat, desc, amount_value, date, pay, stat)
 
             clear_form()
             load_expenses()
             show_message("Expense saved.")
         except Exception as error:
-            show_message(f"Error: {error}")
+            show_message(f"Error saving expense: {error}")
 
     def update_expense_data(e):
         if editing_id is None:
@@ -99,24 +104,28 @@ def expenses_view(page: ft.Page):
         pay = payment_method.value.strip()
         stat = status.value.strip()
 
-        if not cat or not desc or not date:
+        if cat == "" or desc == "" or date == "":
             show_message("Fill all required fields.")
             return
 
         try:
-            amount_value = float(amount.value)
+            amount_value = int(amount.value)
+        except:
+            show_message("Amount must be a whole number.")
+            return
 
-            if amount_value <= 0:
-                show_message("Amount must be positive.")
-                return
+        if amount_value <= 0:
+            show_message("Amount must be positive.")
+            return
 
+        try:
             update_expense(editing_id, cat, desc, amount_value, date, pay, stat)
 
             clear_form()
             load_expenses()
             show_message("Expense updated.")
         except Exception as error:
-            show_message(f"Error: {error}")
+            show_message(f"Error updating expense: {error}")
 
     def remove_expense(expense_id):
         try:
@@ -125,7 +134,7 @@ def expenses_view(page: ft.Page):
             load_expenses()
             show_message("Expense deleted.")
         except Exception as error:
-            show_message(f"Error: {error}")
+            show_message(f"Error deleting expense: {error}")
 
     def refresh_table(e):
         load_expenses()
@@ -142,58 +151,63 @@ def expenses_view(page: ft.Page):
 
     def load_expenses():
         table_area.controls.clear()
-        expenses = get_expenses()
 
-        if not expenses:
-            table_area.controls.append(ft.Text("No expenses yet."))
-        else:
-            rows = []
+        try:
+            expenses = get_expenses()
 
-            for expense in expenses:
-                rows.append(
-                    ft.DataRow(
-                        cells=[
-                            ft.DataCell(ft.Text(str(expense[0]))),
-                            ft.DataCell(ft.Text(str(expense[1]))),
-                            ft.DataCell(ft.Text(str(expense[2]))),
-                            ft.DataCell(ft.Text(str(expense[3]))),
-                            ft.DataCell(ft.Text(str(expense[4]))),
-                            ft.DataCell(ft.Text(str(expense[5]))),
-                            ft.DataCell(ft.Text(str(expense[6]))),
-                            ft.DataCell(
-                                ft.TextButton(
-                                    "Edit",
-                                    on_click=make_edit_handler(expense)
-                                )
-                            ),
-                            ft.DataCell(
-                                ft.TextButton(
-                                    "Delete",
-                                    on_click=make_delete_handler(expense[0])
-                                )
-                            ),
-                        ]
+            if not expenses:
+                table_area.controls.append(ft.Text("No expenses yet."))
+            else:
+                rows = []
+
+                for expense in expenses:
+                    rows.append(
+                        ft.DataRow(
+                            cells=[
+                                ft.DataCell(ft.Text(str(expense[0]))),
+                                ft.DataCell(ft.Text(str(expense[1]))),
+                                ft.DataCell(ft.Text(str(expense[2]))),
+                                ft.DataCell(ft.Text(str(expense[3]))),
+                                ft.DataCell(ft.Text(str(expense[4]))),
+                                ft.DataCell(ft.Text(str(expense[5]))),
+                                ft.DataCell(ft.Text(str(expense[6]))),
+                                ft.DataCell(
+                                    ft.TextButton(
+                                        "Edit",
+                                        on_click=make_edit_handler(expense)
+                                    )
+                                ),
+                                ft.DataCell(
+                                    ft.TextButton(
+                                        "Delete",
+                                        on_click=make_delete_handler(expense[0])
+                                    )
+                                ),
+                            ]
+                        )
+                    )
+
+                table_area.controls.append(
+                    ft.DataTable(
+                        columns=[
+                            ft.DataColumn(ft.Text("ID")),
+                            ft.DataColumn(ft.Text("Category")),
+                            ft.DataColumn(ft.Text("Description")),
+                            ft.DataColumn(ft.Text("Amount")),
+                            ft.DataColumn(ft.Text("Date")),
+                            ft.DataColumn(ft.Text("Payment")),
+                            ft.DataColumn(ft.Text("Status")),
+                            ft.DataColumn(ft.Text("Edit")),
+                            ft.DataColumn(ft.Text("Delete")),
+                        ],
+                        rows=rows,
                     )
                 )
 
-            table_area.controls.append(
-                ft.DataTable(
-                    columns=[
-                        ft.DataColumn(ft.Text("ID")),
-                        ft.DataColumn(ft.Text("Category")),
-                        ft.DataColumn(ft.Text("Description")),
-                        ft.DataColumn(ft.Text("Amount")),
-                        ft.DataColumn(ft.Text("Date")),
-                        ft.DataColumn(ft.Text("Payment")),
-                        ft.DataColumn(ft.Text("Status")),
-                        ft.DataColumn(ft.Text("Edit")),
-                        ft.DataColumn(ft.Text("Delete")),
-                    ],
-                    rows=rows
-                )
-            )
+            page.update()
 
-        page.update()
+        except Exception as error:
+            show_message(f"Error loading expenses: {error}")
 
     load_expenses()
 
@@ -203,13 +217,16 @@ def expenses_view(page: ft.Page):
             controls=[
                 ft.Text("Expenses", size=22, weight=ft.FontWeight.BOLD),
                 editing_text,
-                ft.Row([category, description, amount], wrap=True),
+                ft.Row(
+                    controls=[category, description, amount],
+                    wrap=True
+                ),
                 ft.Row(
                     controls=[
                         expense_date,
-                        ft.ElevatedButton(
-                            "Pick date",
+                        ft.Button(
                             icon=ft.Icons.CALENDAR_MONTH,
+                            content="Pick date",
                             on_click=open_expense_picker,
                         ),
                         payment_method,
@@ -219,7 +236,7 @@ def expenses_view(page: ft.Page):
                 ),
                 ft.Row(
                     controls=[
-                        ft.ElevatedButton("Save", on_click=save_expense_data),
+                        ft.ElevatedButton("Save", on_click=save_expense),
                         ft.ElevatedButton("Update", on_click=update_expense_data),
                         ft.OutlinedButton("Clear", on_click=clear_form),
                         ft.OutlinedButton("Refresh", on_click=refresh_table),
